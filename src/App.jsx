@@ -43,6 +43,17 @@ function App() {
     }
   }
 
+  const borrarUsuario = async (id) => {
+    try {
+      await store.collection('agenda').doc(id).delete()
+      const {docs} = await  store.collection('agenda').get()
+      const nuevoArray = docs.map(item => ({id: item.id, ...item.data()}))
+      setUsuarios(nuevoArray)
+    } catch (e) {
+      console.log(e)
+    }
+  }
+
   return (
     <div className="container">
       <div className="row">
@@ -67,12 +78,14 @@ function App() {
         </div>
         <div className="col">
           <h2>Lista de tu Agenda</h2>
-          <ul>
+          <ul className="list-group">
             {
               usuarios.length !== 0 ?
               (
               usuarios.map(item => (
-                  <li key={item.id}>{item.nombre} -- {item.telefono}</li>
+                  <li className="row list-group-item" key={item.id}>Nombre: {item.nombre} -- Tel: {item.telefono}
+                  <button onClick={(id) => {borrarUsuario(item.id)}} className="btn btn-danger float-right">BORRAR</button>
+                  </li>
               ))
               ) :
               (
