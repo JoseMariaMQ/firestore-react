@@ -6,29 +6,41 @@ function App() {
   const [nombre, setNombre] = useState("")
   const [phone, setPhone] = useState("")
   const [error, setError] = useState("")
-  const [usuario, setUsuario] = useState([])
+  const [usuarios, setUsuarios] = useState([])
 
-  const setUsuarios = async (e) => {
+  useEffect(() => {
+    const getUsuarios = async () => {
+      const {docs} = await  store.collection('agenda').get()
+      const nuevoArray = docs.map(item => ({id: item.id, ...item.data()}))
+      setUsuarios(nuevoArray)
+    }
+    getUsuarios()
+  },[])
+
+  const setUsuario = async (e) => {
     e.preventDefault()
     if (!nombre.trim()) {
       setError("El campo nombre está vacío")
     } else if (!phone.trim()) {
       setError("El campo teléfono está vacío")
+    } else {
+      const usuario = {
+        nombre: nombre,
+        telefono: phone
+      }
+      try {
+        const data = await store.collection('agenda').add(usuario)
+        const {docs} = await  store.collection('agenda').get()
+        const nuevoArray = docs.map(item => ({id: item.id, ...item.data()}))
+        setUsuarios(nuevoArray)
+        alert('Usuario añadido')
+        setNombre('')
+        setPhone('')
+        setError('')
+      } catch (e) {
+        console.log(e)
+      }
     }
-
-    const usuario = {
-      nombre: nombre,
-      telefono: phone
-    }
-    try {
-      const data = await store.collection('agenda').add(usuario)
-      console.log('Tarea añadira')
-    } catch (e) {
-      console.log(e)
-    }
-    setNombre('')
-    setPhone('')
-    setError('')
   }
 
   return (
@@ -36,7 +48,7 @@ function App() {
       <div className="row">
         <div className="col">
           <h2>Formulario de Usuarios</h2>
-          <form onSubmit={setUsuarios} className="form-group">
+          <form onSubmit={setUsuario} className="form-group">
             <input value={nombre} onChange={(e) => {setNombre(e.target.value)}} className="form-control" placeholder="Introduce el nombre" type="text"/>
             <input value={phone} onChange={(e) => {setPhone(e.target.value)}} className="form-control mt-3" placeholder="Introduce el número" type="text"/>
             <input className="btn btn-dark btn-block mt-3" type="submit" value="Registrar"/>
@@ -55,6 +67,21 @@ function App() {
         </div>
         <div className="col">
           <h2>Lista de tu Agenda</h2>
+          <ul>
+            {
+              usuarios.length !== 0 ?
+              (
+              usuarios.map(item => (
+                  <li key={item.id}>{item.nombre} -- {item.telefono}</li>
+              ))
+              ) :
+              (
+              <span>
+                No hay usuarios en tu agenda
+              </span>
+              )
+            }
+          </ul>
         </div>
       </div>
     </div>
